@@ -23,6 +23,19 @@ def fit_cut_the_tail(X,y,quantiles,tail_classifier,lower_tail_model,normal_model
     upper_tail_model.fit(X[y_tail==3],y[y_tail==3])
     
 
+def predict_cut_the_tails(X,tail_classifier,lower_tail_model,normal_model,upper_tail_model):
+
+    y_tail = tail_classifier.predict(X)
+
+    y_lower = lower_tail_model.predict(X)
+    y_normal = normal_model.predict(X)
+    y_upper = upper_tail_model.predict(X)
+
+    y = y_lower*(y_tail==1) + y_normal*(y_tail==2) + y_upper*(y_tail==3)
+
+    return y  
+
+
 def fit_tail_classifier(X,y_tail,model):
     model.fit(X,y_tail)
     return model
@@ -100,3 +113,4 @@ def split_by_quantile(df,target,q):
     nddf = df[(df[target] > q[0]) & (df[target] < q[1])]
 
     return lbdf,nddf,ubdf
+
