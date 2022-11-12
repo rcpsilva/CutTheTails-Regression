@@ -1,6 +1,26 @@
 import numpy as np
 from copy import deepcopy
 
+def fit_cut_the_tail_proxy(X,y,quantiles,IQR,proxy_model,lower_tail_model,normal_model,upper_tail_model):
+
+    proxy_model.fit(X,y)
+
+    lower_outlier = (y < (quantiles[0] - 1.5*IQR))
+    upper_outlier = (y > (quantiles[1] + 1.5*IQR))
+    normal = (y >= (quantiles[0] - 1.5*IQR)) & (y <= (quantiles[1] + 1.5*IQR))
+
+    if np.sum(lower_outlier) > 1:
+        lower_tail_model.fit(X[lower_outlier],y[lower_outlier])
+    else:
+        lower_tail_model.fit(X[normal],y[normal])
+
+    if np.sum(upper_outlier) > 1:
+        upper_tail_model.fit(X[upper_outlier],y[upper_outlier])
+    else:
+        upper_tail_model.fit(X[normal],y[normal])
+
+    normal_model.fit(X[normal],y[normal])
+
 def fit_cut_the_tail(X,y,quantiles,tail_classifier,lower_tail_model,normal_model,upper_tail_model):
     q = np.quantile(y,q = quantiles)
 
