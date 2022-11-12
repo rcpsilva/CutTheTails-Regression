@@ -21,6 +21,21 @@ def fit_cut_the_tail_proxy(X,y,quantiles,IQR,proxy_model,lower_tail_model,normal
 
     normal_model.fit(X[normal],y[normal])
 
+def predict_cut_the_tail_proxy(X,quantiles,IQR,proxy_model,lower_tail_model,normal_model,upper_tail_model):
+
+    y_proxy = proxy_model.predict(X)
+
+    lower_outlier = (y_proxy < (quantiles[0] - 1.5*IQR))
+    upper_outlier = (y_proxy > (quantiles[1] + 1.5*IQR))
+    normal = (y_proxy >= (quantiles[0] - 1.5*IQR)) & (y_proxy <= (quantiles[1] + 1.5*IQR))
+
+    y_lower = lower_tail_model.predict(X)
+    y_normal = normal_model.predict(X)
+    y_upper = upper_tail_model.predict(X)
+
+    return y_lower*lower_outlier + y_normal*normal + y_upper*upper_outlier
+
+
 def fit_cut_the_tail(X,y,quantiles,tail_classifier,lower_tail_model,normal_model,upper_tail_model):
     q = np.quantile(y,q = quantiles)
 
