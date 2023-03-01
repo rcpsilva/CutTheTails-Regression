@@ -1,5 +1,6 @@
 import numpy as np
 from copy import deepcopy
+import pandas as pd
 
 def fit_cut_the_tail_proxy(X,y,quantiles,IQR,proxy_model,lower_tail_model,normal_model,upper_tail_model):
 
@@ -121,7 +122,7 @@ def split_by_quantile_class(df,target,q):
         elif row[target] >= q[1]:
             quant_class.append(2)
     
-    df['tail_class'] = quant_class
+    df['tail_class'] = pd.Series(quant_class)
 
     return df
 
