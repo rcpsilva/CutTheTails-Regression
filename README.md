@@ -1,2 +1,2 @@
-# TailNotTail Regression
+# Cut the Tails Regression
  
