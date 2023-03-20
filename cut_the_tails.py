@@ -45,7 +45,6 @@ def fit_cut_the_tail(X,y,quantiles,tail_classifier,lower_tail_model,normal_model
     y_tail = (y <= q[0])*1 + (y >= q[1])*3 + ((y > q[0]) & (y < q[1]))*2
 
     # fit tail classifier
-
     tail_classifier.fit(X,y_tail)
 
     # fit lower tail model
