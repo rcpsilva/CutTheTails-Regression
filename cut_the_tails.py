@@ -189,10 +189,25 @@ def split_by_quantile(df,target,q):
 
     return lbdf,nddf,ubdf
 
-def get_optimal_percentiles(X,y,tail_classifier,lower_tail_model,normal_model,upper_tail_model):
+def get_optimal_percentiles_brute_force(X,y,tail_classifier,lower_tail_model,normal_model,upper_tail_model):
 
     percentiles = [0,1]
 
     # TO_DO
 
     return percentiles
+
+def get_optimal_percentiles_nelder_mead(X,y,tail_classifier,lower_tail_model,normal_model,upper_tail_model):
+
+    percentiles = [0,1]
+
+    # TO_DO
+
+    return percentiles
+
+def objective(x,args):
+
+    # TO_DO
+
+    return x
+
