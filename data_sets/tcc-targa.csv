@@ -1,0 +1,61 @@
+data_set,type,strategy,model,cut_1,cut_2,MAE,MAPE
+Blueberry Yield,Bicaudal,baseline,Random Forest,40.00%,85.00%,147.0134,0.0264
+Blueberry Yield,Bicaudal,baseline,Decision Tree,40.00%,85.00%,174.7321,0.0322
+Blueberry Yield,Bicaudal,baseline,XGBoost,40.00%,85.00%,124.5477,0.0232
+Employee Performance,Bicaudal,baseline,Random Forest,55.00%,90.00%,0.0318,0.0506
+Employee Performance,Bicaudal,baseline,Decision Tree,55.00%,90.00%,0.0398,0.0702
+Employee Performance,Bicaudal,baseline,XGBoost,55.00%,90.00%,0.0329,0.0546
+Financial Distress,Bicaudal,baseline,Random Forest,27.50%,45.00%,0.7136,0.9576
+Financial Distress,Bicaudal,baseline,Decision Tree,27.50%,45.00%,0.8554,0.7892
+Financial Distress,Bicaudal,baseline,XGBoost,27.50%,45.00%,0.7797,2.0154
+Car Price,Bicaudal,baseline,Random Forest,2.50%,20.00%,118462.0953,0.2299
+Car Price,Bicaudal,baseline,Decision Tree,2.50%,20.00%,134500.4449,0.2672
+Car Price,Bicaudal,baseline,XGBoost,2.50%,20.00%,66557.2507,0.143
+Real Estate,Bicaudal,baseline,Random Forest,17.00%,50.00%,4.7513,0.1257
+Real Estate,Bicaudal,baseline,Decision Tree,17.00%,50.00%,6.2949,0.2037
+Real Estate,Bicaudal,baseline,XGBoost,17.00%,50.00%,5.8993,0.1926
+Wind Speed,Bicaudal,baseline,Random Forest,10.00%,40.00%,3.4536,0.3637
+Wind Speed,Bicaudal,baseline,Decision Tree,10.00%,40.00%,3.5085,0.3761
+Wind Speed,Bicaudal,baseline,XGBoost,10.00%,40.00%,3.6114,0.4025
+Bike Sharing,Monocauda à direita,baseline,Random Forest,0.00%,50.00%,72.7323,0.4279
+Bike Sharing,Monocauda à direita,baseline,Decision Tree,0.00%,50.00%,75.4061,0.4411
+Bike Sharing,Monocauda à direita,baseline,XGBoost,0.00%,50.00%,42.3998,0.9277
+Solar Radiation,Monocauda à direita,baseline,Random Forest,0.00%,20.00%,62.6775,0.4938
+Solar Radiation,Monocauda à direita,baseline,Decision Tree,0.00%,20.00%,66.0718,0.4896
+Solar Radiation,Monocauda à direita,baseline,XGBoost,0.00%,20.00%,38.4113,1.3824
+House Rent,Monocauda à direita,baseline,Random Forest,0.00%,10.00%,16013.3888,0.3724
+House Rent,Monocauda à direita,baseline,Decision Tree,0.00%,10.00%,16491.5959,0.3906
+House Rent,Monocauda à direita,baseline,XGBoost,0.00%,10.00%,16056.5811,0.3821
+Medical Cost,Monocauda à direita,baseline,Random Forest,0.00%,45.00%,2462.3055,0.284
+Medical Cost,Monocauda à direita,baseline,Decision Tree,0.00%,45.00%,2708.3103,0.2747
+Medical Cost,Monocauda à direita,baseline,XGBoost,0.00%,45.00%,2980.4903,0.4063
+Blueberry Yield,Bicaudal,cut-the-tails,Random Forest,40.00%,85.00%,138.7309,0.0248
+Blueberry Yield,Bicaudal,cut-the-tails,Decision Tree,40.00%,85.00%,165.5702,0.0307
+Blueberry Yield,Bicaudal,cut-the-tails,XGBoost,40.00%,85.00%,115.1578,0.021
+Employee Performance,Bicaudal,cut-the-tails,Random Forest,55.00%,90.00%,0.0317,0.0521
+Employee Performance,Bicaudal,cut-the-tails,Decision Tree,55.00%,90.00%,0.0343,0.061
+Employee Performance,Bicaudal,cut-the-tails,XGBoost,55.00%,90.00%,0.0294,0.0502
+Financial Distress,Bicaudal,cut-the-tails,Random Forest,27.50%,45.00%,0.7118,0.6172
+Financial Distress,Bicaudal,cut-the-tails,Decision Tree,27.50%,45.00%,0.7512,0.708
+Financial Distress,Bicaudal,cut-the-tails,XGBoost,27.50%,45.00%,0.807,1.7962
+Car Price,Bicaudal,cut-the-tails,Random Forest,2.50%,20.00%,121430.1431,0.2262
+Car Price,Bicaudal,cut-the-tails,Decision Tree,2.50%,20.00%,130610.3726,0.2432
+Car Price,Bicaudal,cut-the-tails,XGBoost,2.50%,20.00%,65774.9214,0.1466
+Real Estate,Bicaudal,cut-the-tails,Random Forest,17.00%,50.00%,5.9881,0.1486
+Real Estate,Bicaudal,cut-the-tails,Decision Tree,17.00%,50.00%,6.3776,0.161
+Real Estate,Bicaudal,cut-the-tails,XGBoost,17.00%,50.00%,5.557,0.151
+Wind Speed,Bicaudal,cut-the-tails,Random Forest,10.00%,40.00%,4.1058,0.3558
+Wind Speed,Bicaudal,cut-the-tails,Decision Tree,10.00%,40.00%,4.022,0.4116
+Wind Speed,Bicaudal,cut-the-tails,XGBoost,10.00%,40.00%,4.0861,0.43
+Bike Sharing,Monocauda à direita,cut-the-tails,Random Forest,0.00%,50.00%,63.4385,0.4183
+Bike Sharing,Monocauda à direita,cut-the-tails,Decision Tree,0.00%,50.00%,63.9947,0.444
+Bike Sharing,Monocauda à direita,cut-the-tails,XGBoost,0.00%,50.00%,41.4143,0.3638
+Solar Radiation,Monocauda à direita,cut-the-tails,Random Forest,0.00%,20.00%,60.3699,0.4028
+Solar Radiation,Monocauda à direita,cut-the-tails,Decision Tree,0.00%,20.00%,64.8133,0.3945
+Solar Radiation,Monocauda à direita,cut-the-tails,XGBoost,0.00%,20.00%,37.6464,1.2315
+House Rent,Monocauda à direita,cut-the-tails,Random Forest,0.00%,10.00%,15944.8442,0.3839
+House Rent,Monocauda à direita,cut-the-tails,Decision Tree,0.00%,10.00%,16526.023,0.398
+House Rent,Monocauda à direita,cut-the-tails,XGBoost,0.00%,10.00%,15952.6237,0.3886
+Medical Cost,Monocauda à direita,cut-the-tails,Random Forest,0.00%,45.00%,2077.6972,0.2683
+Medical Cost,Monocauda à direita,cut-the-tails,Decision Tree,0.00%,45.00%,2445.4098,0.2736
+Medical Cost,Monocauda à direita,cut-the-tails,XGBoost,0.00%,45.00%,2621.3093,0.2636

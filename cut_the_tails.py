@@ -1,6 +1,9 @@
 import numpy as np
 from copy import deepcopy
 import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_absolute_percentage_error
+from scipy.optimize import minimize, Bounds
 
 def fit_cut_the_tail_proxy(X,y,quantiles,IQR,proxy_model,lower_tail_model,normal_model,upper_tail_model):
 
@@ -150,3 +153,134 @@ def split_by_quantile(df,target,q):
 
     return lbdf,nddf,ubdf
 
+def get_optimal_percentiles_one_tail_brute_force(df, target, features, classifier, model):
+    ''' Find the best percentile for the cut in a one tailed distribuition, using brute force.
+        This function compares the MAPE from the results of all the possible percentiles starting at 100% and decreasing by 5% each iteration.
+        It returns the percentiles with the best MAPE.
+    
+    Args
+
+        df: original dataset
+        target: target variable
+        classifier: classifier for the classification of the data for the tests
+        model: regression models for the superior tail and the middle
+
+    Returns:
+
+        best_percentiles: the percentiles that achieved the lesser MAPE
+
+    '''
+
+    best_MAPE = 10000.0
+
+    for i in np.arange(1.0, 0 , -0.05):
+        #select the percentile and classify the entire dataframe
+        cdf = split_by_quantile_class(df, target,[0.0, round(i, 2)])
+
+        X = cdf[features].to_numpy()
+        y_tail = cdf['tail_class'].to_numpy()
+        y = cdf[target].to_numpy()
+
+        #test/train splitting
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+        X_train_aux, X_test_aux, y_train_tail, y_test_tail = train_test_split(X, y_tail, test_size=0.2, random_state=0)
+
+        #building the classifier and ML models
+        tail_classifier = fit_tail_classifier(X,y_tail,classifier)
+        models = fit_tail_models(X_train,y_train,y_train_tail,model)
+
+        #Predicting
+        y_tail = batch_tail_predict(X_test,tail_classifier,models)
+
+        #Calculating MAPE and comparing with best result
+        current_MAPE = mean_absolute_percentage_error(y_tail,y_test)
+        if current_MAPE < best_MAPE:
+            best_MAPE = current_MAPE
+            best_percentiles = [0.0, round(i, 2)]
+
+    return best_percentiles
+
+def get_optimal_percentiles_two_tail_brute_force(df, target, features, classifier, model):
+    ''' Find the best percentile for the cut in a two tailed distribuition, using brute force.
+        This function compares the MAPE from the results of all the possible percentiles starting at 100% and decreasing by 5% each iteration.
+        It returns the percentiles with the best MAPE.
+    
+    Args
+
+        df: original dataset
+        target: target variable
+        classifier: classifier for the classification of the data for the tests
+        model: regression models for the superior tail and the middle
+
+    Returns:
+
+        best_percentiles: the percentiles that achieved the lesser MAPE
+
+    '''
+
+    best_MAPE = 10000.0
+
+    for i in np.arange(0, 1.0, 0.05):
+        for j in np.arange(1.0, i, -0.05):
+            #select the percentile and classify the entire dataframe
+            cdf = split_by_quantile_class(df, target,[round(i, 2), round(j, 2)])
+
+            X = cdf[features].to_numpy()
+            y_tail = cdf['tail_class'].to_numpy()
+            y = cdf[target].to_numpy()
+
+            #test/train splitting
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+            X_train_aux, X_test_aux, y_train_tail, y_test_tail = train_test_split(X, y_tail, test_size=0.2, random_state=0)
+
+            #building the classifier and ML models
+            tail_classifier = fit_tail_classifier(X,y_tail,classifier)
+            models = fit_tail_models(X_train,y_train,y_train_tail,model)
+
+            #Predicting
+            y_tail = batch_tail_predict(X_test,tail_classifier,models)
+
+            #Calculating MAPE and comparing with best result
+            current_MAPE = mean_absolute_percentage_error(y_tail,y_test)
+            if current_MAPE < best_MAPE:
+                best_MAPE = current_MAPE
+                best_percentiles = [round(i, 2), round(j, 2)]
+
+    return best_percentiles
+
+def get_optimal_percentiles_one_tail_nelder_mead(df, target, features, classifier, model):
+
+    x0 = 0.05
+    bnd = Bounds(0.0, 1.0)
+    result = minimize(objective, x0, args = (df, target, features, classifier, model), method="nelder-mead", bounds=bnd)
+
+    #percentiles = [0.0, result['x']]
+
+    #return percentiles
+
+    print(result)
+    return result
+
+def objective(x, df, target, features, classifier, model):
+
+    #select the percentile and classify the entire dataframe
+    cdf = split_by_quantile_class(df, target,[0.0, x])
+
+    X = cdf[features].to_numpy()
+    y_tail = cdf['tail_class'].to_numpy()
+    y = cdf[target].to_numpy()
+
+    #test/train splitting
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+    X_train_aux, X_test_aux, y_train_tail, y_test_tail = train_test_split(X, y_tail, test_size=0.2, random_state=0)
+
+    #building the classifier and ML models
+    tail_classifier = fit_tail_classifier(X,y_tail,classifier)
+    models = fit_tail_models(X_train,y_train,y_train_tail,model)
+
+    #Predicting
+    y_tail = batch_tail_predict(X_test,tail_classifier,models)
+
+    x = mean_absolute_percentage_error(y_tail,y_test)
+
+    return x
