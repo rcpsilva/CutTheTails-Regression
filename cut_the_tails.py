@@ -204,8 +204,11 @@ def objective_one_tail(x, df, target, features, classifier, model, mode):
 
 def objective_two_tail(x, y, df, target, features, classifier, model):  
 
+    x[1], x[0] = x[0], x[1] if x[0] > x[1] else x[1], x[0] 
+
+
     #select the percentile and classify the entire dataframe
-    cdf = split_by_quantile_class(df, target,[x, y])
+    cdf = split_by_quantile_class(df, target, x)
 
     X = cdf[features].to_numpy()
     y_tail = cdf['tail_class'].to_numpy()
