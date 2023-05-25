@@ -5,6 +5,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_percentage_error
 from scipy.optimize import minimize, basinhopping, Bounds
 from numpy.random import rand
+import matplotlib.pyplot as plt
 
 def fit_cut_the_tail_proxy(X,y,quantiles,IQR,proxy_model,lower_tail_model,normal_model,upper_tail_model):
 
@@ -154,7 +155,30 @@ def split_by_quantile(df,target,q):
 
     return lbdf,nddf,ubdf
 
-def objective_one_tail(x, df, target, features, classifier, model):
+def get_mode_histogram(df, target, bins):
+    '''
+        Args
+
+            df: original dataset
+            target: target variable
+            bins: quantity of bins for the histogram
+
+        Returns:
+
+            mode_percentage: the percentage refering to the mode of the distribution, rounded
+
+    '''
+    n, bins, patches = plt.hist(df[target], bins=bins)
+
+    mode_index = n.argmax()
+    
+    mode = round((bins[mode_index] + bins[mode_index+1])/2)
+
+    mode_percentage = round(mode/bins[99], 2)
+
+    return mode_percentage
+
+def objective_one_tail(x, df, target, features, classifier, model, mode):
 
     #select the percentile and classify the entire dataframe
     cdf = split_by_quantile_class(df, target,[0.0, x])
@@ -221,8 +245,10 @@ def get_optimal_percentiles_one_tail_brute_force(df, target, features, classifie
     '''
 
     best_MAPE = 10000.0
+    mode = get_mode_histogram(df, target, 100)
+    best_percentiles = [0, 100]
 
-    for i in np.arange(1.0, 0 , -0.05):
+    for i in np.arange(1.0, mode , -0.05):
         #select the percentile and classify the entire dataframe
         cdf = split_by_quantile_class(df, target,[0.0, round(i, 2)])
 
@@ -250,7 +276,8 @@ def get_optimal_percentiles_one_tail_brute_force(df, target, features, classifie
     return best_percentiles
 
 def get_optimal_percentiles_two_tail_brute_force(df, target, features, classifier, model):
-    ''' Find the best percentile for the cut in a two tailed distribuition, using brute force.
+    ''' 
+        Find the best percentile for the cut in a two tailed distribuition, using brute force.
         This function compares the MAPE from the results of all the possible percentiles starting at 100% and decreasing by 5% each iteration.
         It returns the percentiles with the best MAPE.
     
@@ -268,9 +295,11 @@ def get_optimal_percentiles_two_tail_brute_force(df, target, features, classifie
     '''
 
     best_MAPE = 10000.0
+    mode = get_mode_histogram(df, target, 100)
+    best_percentiles = [0, 100]
 
-    for i in np.arange(0, 1.0, 0.05):
-        for j in np.arange(1.0, i, -0.05):
+    for i in np.arange(0, mode, 0.05):
+        for j in np.arange(1.0, mode, -0.05):
             #select the percentile and classify the entire dataframe
             cdf = split_by_quantile_class(df, target,[round(i, 2), round(j, 2)])
 
@@ -297,19 +326,37 @@ def get_optimal_percentiles_two_tail_brute_force(df, target, features, classifie
 
     return best_percentiles
 
-def get_optimal_percentiles_one_tail_nelder_mead(df, target, features, classifier, model):
+def get_optimal_percentiles_one_tail_nelder_mead(df, target, features, classifier, model, method):
 
     bnd = Bounds(0.0, 1.0)
-
-    # define range for input
+    mode = get_mode_histogram(df, target, 100)
     r_min, r_max = 0.0, 1.0
-    # define the starting point as a random sample from the domain
     x0 = r_min + rand(2) * (r_max - r_min)
     
-    #result = minimize(objective_one_tail, x0, args = (df, target, features, classifier, model), method="nelder-mead", bounds=bnd)
-    result = basinhopping(objective_one_tail, x0, minimizer_kwargs={'method':'nelder-mead', 'args': (df, target, features, classifier, model), 'bounds': bnd}, stepsize=5.0, niter=100)
+    if method == 'normal':
+        result = minimize(objective_one_tail, x0, args = (df, target, features, classifier, model, mode), method="nelder-mead", bounds=bnd)
+    if method == 'basin-hopping':
+        result = basinhopping(objective_one_tail, x0, minimizer_kwargs={'method':'nelder-mead', 'args': (df, target, features, classifier, model), 'bounds': bnd}, stepsize=5.0, niter=100)
 
     percentiles = result['x']
 
     return percentiles
 
+def get_optimal_percentiles_two_tail_nelder_mead(df, target, features, classifier, model, method):
+    return 0
+
+def get_optimal_percentiles(df, target, features, classifier, model, method, algorythm, qnt_of_tails):
+    #methods are normal and basin hopping
+    #algorythms are: brute force, nelder mead...
+
+    if algorythm == 'brute-force':
+        if qnt_of_tails == 1:
+            percentiles = get_optimal_percentiles_one_tail_brute_force(df, target, features, classifier, model)
+        else:
+            percentiles = get_optimal_percentiles_two_tail_brute_force(df, target, features, classifier, model)
+    elif algorythm == 'nelder-mead':
+        if qnt_of_tails == 1:
+            percentiles = get_optimal_percentiles_one_tail_nelder_mead(df, target, features, classifier, model, method)
+        else:
+            percentiles = get_optimal_percentiles_two_tail_nelder_mead(df, target, features, classifier, model, method)
+    return percentiles
