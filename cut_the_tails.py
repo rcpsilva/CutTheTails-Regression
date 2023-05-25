@@ -3,7 +3,7 @@ from copy import deepcopy
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_percentage_error
-from scipy.optimize import minimize, basinhopping, Bounds
+from scipy.optimize import minimize, basinhopping, Bounds, direct
 from numpy.random import rand
 import matplotlib.pyplot as plt
 
@@ -41,7 +41,6 @@ def predict_cut_the_tail_proxy(X,quantiles,IQR,proxy_model,lower_tail_model,norm
 
     return y_lower*lower_outlier + y_normal*normal + y_upper*upper_outlier
 
-
 def fit_cut_the_tail(X,y,quantiles,tail_classifier,lower_tail_model,normal_model,upper_tail_model):
     q = np.quantile(y,q = quantiles)
 
@@ -63,7 +62,6 @@ def fit_cut_the_tail(X,y,quantiles,tail_classifier,lower_tail_model,normal_model
     # fit upper tail model
     upper_tail_model.fit(X[y_tail==3],y[y_tail==3])
     
-
 def predict_cut_the_tails(X,tail_classifier,lower_tail_model,normal_model,upper_tail_model):
 
     y_tail = tail_classifier.predict(X)
@@ -76,7 +74,6 @@ def predict_cut_the_tails(X,tail_classifier,lower_tail_model,normal_model,upper_
 
     return y  
 
-
 def fit_tail_classifier(X,y_tail,model):
     model.fit(X,y_tail)
     return model
@@ -84,7 +81,10 @@ def fit_tail_classifier(X,y_tail,model):
 def fit_tail_models(X,y,y_tail,model):
     models = [deepcopy(model) for i in [0,1,2]]
     for i in [0,1,2]:
-        models[i].fit(X[y_tail==i],y[y_tail==i]) 
+        if X[y_tail==i].shape[0] < 2:
+            models[i]=[]
+        else:
+            models[i].fit(X[y_tail==i],y[y_tail==i]) 
     return models
 
 def tail_predict(x,tail_classifier,tail_models):
@@ -202,27 +202,36 @@ def objective_one_tail(x, df, target, features, classifier, model, mode):
 
     return Mape
 
-def objective_two_tail(x, y, df, target, features, classifier, model):  
+def objective_two_tail(x, df, target, features, classifier, model):  
 
-    x[1], x[0] = x[0], x[1] if x[0] > x[1] else x[1], x[0] 
-
+    if x[0] > x[1]:
+        x[1], x[0] = x[0], x[1]
 
     #select the percentile and classify the entire dataframe
     cdf = split_by_quantile_class(df, target, x)
 
-    X = cdf[features].to_numpy()
-    y_tail = cdf['tail_class'].to_numpy()
-    y = cdf[target].to_numpy()
+    #X = cdf[features].to_numpy()
+    #y_tail = cdf['tail_class'].to_numpy()
+    #y = cdf[target].to_numpy()
 
     #test/train splitting
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
-    X_train_aux, X_test_aux, y_train_tail, y_test_tail = train_test_split(X, y_tail, test_size=0.2, random_state=0)
+    _X_train, _X_test, y_train, y_test = train_test_split(cdf, cdf[target], test_size=0.2, random_state=0)
+    X_train = _X_train[features].to_numpy()
+    X_test = _X_test[features].to_numpy()
+    y_tail = _X_train['tail_class'].to_numpy()
+    y_train, y_test = y_train.to_numpy(), y_test.to_numpy()
+    
+    #X_train_aux, X_test_aux, y_train_tail, y_test_tail = train_test_split(X, y_tail, test_size=0.2, random_state=0)
 
     #building the classifier and ML models
-    tail_classifier = fit_tail_classifier(X,y_tail,classifier)
-    models = fit_tail_models(X_train,y_train,y_train_tail,model)
+    #print('Fitting tail Classifier')
+    tail_classifier = fit_tail_classifier(X_train,y_tail,classifier)
+
+    #print('Fitting tail models')
+    models = fit_tail_models(X_train,y_train,y_tail,model)
 
     #Predicting
+    #print('getting predictions')
     y_tail = batch_tail_predict(X_test,tail_classifier,models)
 
     Mape = mean_absolute_percentage_error(y_tail,y_test)
@@ -363,3 +372,15 @@ def get_optimal_percentiles(df, target, features, classifier, model, method, alg
         else:
             percentiles = get_optimal_percentiles_two_tail_nelder_mead(df, target, features, classifier, model, method)
     return percentiles
+
+def get_cuts_direct_optimization(df, target, features, classifier, model, optimizer):
+
+    func = lambda x : objective_two_tail(x, df, target, features, classifier, model)
+
+    if optimizer == 'direct':
+        bounds = Bounds([0., 0.], [1., 1.])
+        res = direct(func,bounds)
+        x = res.x
+        fval = res.fun
+
+    return x,fval
