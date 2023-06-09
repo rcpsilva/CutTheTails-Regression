@@ -199,19 +199,19 @@ def get_cuts_direct_optimization(df, target, features, classifier, model, optimi
 
     if optimizer == 'direct':
         bounds = Bounds([0., 0.], [1., 1.])
-        res = direct(func,bounds)
+        res = direct(func, bounds, eps=1e-3)
         x = res.x
         fval = res.fun
 
     if optimizer == 'brute':
         ranges = (slice(0, 1, 0.05), slice(0, 1, 0.05))
-        res = brute(func,ranges, full_output=True)
+        res = brute(func, ranges, full_output=True)
         x = res[0]
         fval = res[1]
 
     if optimizer == 'differential-evol':
         bounds = Bounds([0., 0.], [1., 1.])
-        res = differential_evolution(func,bounds)
+        res = differential_evolution(func, bounds, tol=1e-3)
         x = res.x
         fval = res.fun
 
