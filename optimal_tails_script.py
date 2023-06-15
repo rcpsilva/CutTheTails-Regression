@@ -220,7 +220,7 @@ for i in Models:
                 model, classifier = select_model_classifier(i)
                 
                 #carregando o dataframe da base selecionada
-                df = pd.read_csv('preprocessed_data_sets\\' + j + '.csv')
+                df = pd.read_csv('preprocessed_data_sets/' + j + '.csv')
                 df.dropna(inplace=True)
                 df = df.reset_index(drop=True)
 

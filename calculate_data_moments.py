@@ -56,7 +56,10 @@ for i in Bases:
     order5 = moment(df[target], moment=5) 
     order6 = moment(df[target], moment=6) 
 
+    #Em Kurtose, quanto maior o resultado, mais pesada é a cauda em comparação com a distribuição normal, leptokurtic
     kurt = kurtosis(df[target], fisher= True)
+
+    #Em Skewness, quanto maior o resultado, sigifica que a cauda direita é mais pesada.
     skewness = skew(df[target])
 
     new_row = {'Base': i, 'ordem_1': order1, 'ordem_2': order2, 'ordem_3': order3, 'ordem_4': order4, 'ordem_5': order5, 'ordem_6': order6, 'kurtosis': kurt, 'skewness': skewness}
