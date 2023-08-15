@@ -29,7 +29,7 @@ Bases = ['bike_sharing_hour', 'Blueberry_Yield', 'car_price', 'employee_performa
 Replicas = [1, 2, 3, 4, 5]
 
 #criando um dataframe para o output
-df_output = pd.DataFrame(columns=['Modelo', 'Base', 'Replica', 'MAPE_test'])
+df_output = pd.DataFrame(columns=['Modelo', 'Base', 'Otimizador', 'Replica', 'Inf_cut', 'Sup_cut', 'MAPE_otimizador', 'MAPE_test'])
 
 def select_feature_target(name):
     if name == 'bike_sharing_hour':
@@ -236,7 +236,7 @@ for i in Models:
 
             #------------------------passando os dados para um arquivo CSV------------------------#
 
-            new_row = {'Modelo': i, 'Base': j, 'Replica': l, 'MAPE_test': Mape_test}
+            new_row = {'Modelo': i, 'Base': j, 'Otimizador': 'Baseline', 'Replica': l, 'Inf_cut': 0, 'Sup_cut': 0, 'MAPE_otimizador': 0, 'MAPE_test': Mape_test}
             df_output.loc[-1] = new_row
             df_output.index = df_output.index + 1
             df_output = df_output.sort_index()

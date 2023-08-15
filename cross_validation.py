@@ -1,16 +1,19 @@
+#Estes testes são feitos com validação cruzada k-fold, com um k = 5
+
+#puxar cortes de um otimizador, neste caso, ecolhi o diff-evol
 import pandas as pd
 import numpy as np
 import cut_the_tails as ct
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.metrics import mean_absolute_percentage_error
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, KFold
 
 '''
 
     Modelo do dataframe a ser criado por este script:
 
-    Modelo|Base|Otimizador|Replica|Inf_cut|Sup_cut|MAPE_otimizador|MAPE_test
+    Modelo|Base|Otimizador|Replica|Inf_cut|Sup_cut|MAPE
 
     Modelo: Modelo ML e Classificador utilizados para o treinamento/testes
     Base: A Base de dados 
@@ -18,8 +21,7 @@ from sklearn.model_selection import train_test_split
     Replica: Réplicas para testes idênticos
     Inf_cut: Corte da cauda inferior
     Sup_cut: Corte da cauda superior
-    MAPE_otimizador: MAPE adquirido pelo otimizador
-    MAPE_test: MAPE adquirido pelos testes, utilizando os cortes definidos pelo otimizador
+    MAPE: MAPE adquirido pelos testes, utilizando os cortes definidos pelo otimizador
 
     No final da execução deste script, será gerado um arquivo csv de nome "optimal_tails.csv" no mesmo nível que este script.
 
@@ -27,15 +29,20 @@ from sklearn.model_selection import train_test_split
 
 Models = ['RandomForest']
 
-Bases = ['wind_dataset'] 
+Bases = ['bike_sharing_hour']
+#, 'Blueberry_Yield', 'car_price', 'employee_performance', 'house_rent', 'medical_cost', 'solar_radiation', 'Financial_Distress', 'Real_estate', 'wind_dataset'
 
-Otimizadores = ['direct', 'differential-evol', 'brute']
-# 
+Otimizadores = ['differential-evol'] 
 
-Replicas = [1, 2, 3, 4, 5]
+Replicas = [1]
 
 #criando um dataframe para o output
-df_output = pd.DataFrame(columns=['Modelo', 'Base', 'Otimizador', 'Replica', 'Inf_cut', 'Sup_cut', 'MAPE_otimizador', 'MAPE_test'])
+df_output = pd.DataFrame(columns=['Modelo', 'Base', 'Otimizador', 'Replica', 'Inf_cut', 'Sup_cut', 'MAPE_test'])
+
+# K = 5 para a validação cruzada
+n_split = 5
+
+kf = KFold(n_splits=n_split)
 
 def select_feature_target(name):
     if name == 'bike_sharing_hour':
@@ -211,6 +218,39 @@ def select_model_classifier(name):
 
     return model, classifier
 
+def select_optimal_cuts(name):
+    if name == 'bike_sharing_hour':
+        return [0.05306370216848327,0.45386215659447826]
+    
+    if name == 'Blueberry_Yield':
+        return [0.4862264584551263,0.9096903279899677]
+    
+    if name == 'car_price':
+        return [0.5240341528945671,0.9422140879397973]
+    
+    if name == 'employee_performance':
+        return [0.20869186955399333,0.8903139210638581]
+    
+    if name == 'house_rent':
+        return [0.03616334850717995,0.24984895071529156]
+    
+    if name == 'medical_cost':
+        return [0.177524584292729,0.692002190352954]
+    
+    if name == 'solar_radiation':
+        return [0.03820002997434446,0.5527332482675485]
+    
+    if name == 'wind_dataset':
+        return [0.04137954538219557,0.15474822607954314]
+    
+    if name == 'Financial_Distress':
+        return [0.12048951955607584,0.20917882224220985]
+    
+    if name == 'Real_estate':
+        return [0.10576030517807855,0.3108907006822149]
+    
+    return target, features
+
 for i in Models:
     for j in Bases:
         for k in Otimizadores:
@@ -228,39 +268,66 @@ for i in Models:
                 #selecionando os features e target do dataframe
                 target, features = select_feature_target(j)
 
-                #calculando os cortes ótimos
-                x, fval = ct.get_cuts_direct_optimization(df, target, features, classifier, model, k)
-
-                #------------------------testando os cortes feitos pelo otimizador------------------------#
-
+                #importando os cortes ótimos
+                x = select_optimal_cuts(j)
+                
                 if x[0] > x[1]:
                     x[1], x[0] = x[0], x[1]
-                
-                #utilizando os percentis ótimos encontrados pelo otimizador
-                cdf = ct.split_by_quantile_class(df, target, x)
 
-                #partilhamento de treinamento/teste
+                #partilhamento de treinamento para o KFold/teste final
+                X_Kfold, X_final_test, Y_Kfold, Y_final_test = train_test_split(df, df[target], test_size=0.2)
+                base_KFold = pd.concat([X_Kfold, Y_Kfold])  #Juntando os dados para o conjunto destinado a validação KFold
+                base_teste_final = pd.concat([X_final_test, Y_final_test])  #Juntando os dados para o conjunto destinado ao teste final
+                print(base_KFold)
+
+                #utilizando os percentis ótimos encontrados pelo otimizador para partir as caudas
+                base_KFold = ct.split_by_quantile_class(base_KFold, target, x)
+                print(base_KFold)
+
+                #partilhamento da base de dados para validação cruzada
+                #treinamento dos modelos 
+                for train_index, test_index in kf.split(base_KFold):
+                    train = base_KFold.iloc[train_index]
+                    test = base_KFold.iloc[test_index]
+                    test.dropna(inplace=True)
+                    print(train)
+                    X_train = train[features].to_numpy()
+                    Y_train = train[target].to_numpy()
+                    X_test = test[features].to_numpy()
+                    Y_test = test[target].to_numpy()
+                    y_tail = train['tail_class'].to_numpy()
+
+                    tail_classifier = ct.fit_tail_classifier(X_train,y_tail,classifier)
+                    models = ct.fit_tail_models(X_train,Y_train,y_tail,model)
+
+                    #predicting...
+                    y_tail = ct.batch_tail_predict(X_test,tail_classifier,models)
+
+                    Mape = mean_absolute_percentage_error(y_tail,Y_test)
+
+                    print(Mape)
+
+
+                '''
                 _X_train, _X_test, y_train, y_test = train_test_split(cdf, cdf[target], test_size=0.2)
-                X_train = _X_train[features].to_numpy()
-                X_test = _X_test[features].to_numpy()
-                y_tail = _X_train['tail_class'].to_numpy()
+                
+                
+                
                 y_train, y_test = y_train.to_numpy(), y_test.to_numpy()
 
                 #construindo os modelos e classificadores
                 tail_classifier = ct.fit_tail_classifier(X_train,y_tail,classifier)
+
+
                 models = ct.fit_tail_models(X_train,y_train,y_tail,model)
-
-                #predicting...
-                y_tail = ct.batch_tail_predict(X_test,tail_classifier,models)
-
-                Mape_test = mean_absolute_percentage_error(y_tail,y_test)
 
                 #------------------------passando os dados para um arquivo CSV------------------------#
 
-                new_row = {'Modelo': i, 'Base': j, 'Otimizador': k, 'Replica': l, 'Inf_cut': x[0], 'Sup_cut': x[1], 'MAPE_otimizador': fval, 'MAPE_test': Mape_test}
+                new_row = {'Modelo': i, 'Base': j, 'Otimizador': k, 'Replica': l, 'Inf_cut': x[0], 'Sup_cut': x[1], 'MAPE_test': Mape_test}
                 df_output.loc[-1] = new_row
                 df_output.index = df_output.index + 1
                 df_output = df_output.sort_index()
 
         #convertendo o dataframe gerado para um CSV
-        df_output.to_csv('optimal_tails.csv', encoding='utf-8', index=False)
+        df_output.to_csv('cross_validation_results.csv', encoding='utf-8', index=False)
+        '''

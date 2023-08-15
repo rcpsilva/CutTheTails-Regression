@@ -157,6 +157,8 @@ def split_by_quantile(df,target,q):
 
 def objective_two_tail(x, df, target, features, classifier, model):  
 
+
+
     if x[0] > x[1]:
         x[1], x[0] = x[0], x[1]
 
@@ -205,7 +207,7 @@ def get_cuts_direct_optimization(df, target, features, classifier, model, optimi
 
     if optimizer == 'brute':
         ranges = (slice(0, 1, 0.05), slice(0, 1, 0.05))
-        res = brute(func, ranges, full_output=True)
+        res = brute(func, ranges, full_output=True, finish=None)
         x = res[0]
         fval = res[1]
 
